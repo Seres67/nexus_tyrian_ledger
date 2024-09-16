@@ -11,6 +11,7 @@ namespace Settings
 {
 const char *IS_ADDON_ENABLED = "IsAddonEnabled";
 const char *SESSIONS_PATH = "SessionsPath";
+const char *SAVE_SESSIONS = "SaveSessions";
 const char *WINDOW_ALPHA = "WindowAlpha";
 const char *API_KEY = "ApiKey";
 const char *DISPLAY_HELP = "DisplayHelp";
@@ -20,8 +21,8 @@ json json_settings;
 std::mutex mutex;
 std::filesystem::path settings_path;
 
-bool is_addon_enabled = true;
 std::filesystem::path sessions_path;
+bool save_sessions = false;
 float window_alpha = 1.f;
 std::string api_key;
 bool display_help = true;
@@ -46,11 +47,11 @@ void load(const std::filesystem::path &path)
             api->Log(ELogLevel_WARNING, addon_name, ex.what());
         }
     }
-    if (!json_settings[IS_ADDON_ENABLED].is_null()) {
-        json_settings[IS_ADDON_ENABLED].get_to(is_addon_enabled);
-    }
     if (!json_settings[SESSIONS_PATH].is_null()) {
         json_settings[SESSIONS_PATH].get_to(sessions_path);
+    }
+    if (!json_settings[SAVE_SESSIONS].is_null()) {
+        json_settings[SAVE_SESSIONS].get_to(save_sessions);
     }
     if (!json_settings[WINDOW_ALPHA].is_null()) {
         json_settings[WINDOW_ALPHA].get_to(window_alpha);

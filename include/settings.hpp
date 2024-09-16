@@ -14,15 +14,15 @@ extern nlohmann::json json_settings;
 extern std::filesystem::path settings_path;
 extern std::mutex mutex;
 
-extern bool is_addon_enabled;
 extern std::filesystem::path sessions_path;
+extern bool save_sessions;
 extern float window_alpha;
 extern std::string api_key;
 extern bool display_help;
 extern bool lock_window;
 
-extern const char *IS_ADDON_ENABLED;
 extern const char *SESSIONS_PATH;
+extern const char *SAVE_SESSIONS;
 extern const char *WINDOW_ALPHA;
 extern const char *API_KEY;
 extern const char *DISPLAY_HELP;

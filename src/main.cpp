@@ -15,7 +15,6 @@ void addon_load(AddonAPI *api_p);
 void addon_unload();
 void addon_render();
 void addon_options();
-void keybind_handler(const char *identifier, bool is_release);
 
 BOOL APIENTRY dll_main(const HMODULE hModule, const DWORD ul_reason_for_call, LPVOID lpReserved)
 {
@@ -41,7 +40,7 @@ extern "C" __declspec(dllexport) AddonDefinition *GetAddonDef()
     addon_def.Version.Major = 0;
     addon_def.Version.Minor = 1;
     addon_def.Version.Build = 0;
-    addon_def.Version.Revision = 0;
+    addon_def.Version.Revision = 1;
     addon_def.Author = "Seres67";
     addon_def.Description = "A Nexus addon to track your current session.";
     addon_def.Load = addon_load;
@@ -68,15 +67,12 @@ void addon_load(AddonAPI *api_p)
     if (std::filesystem::exists(Settings::settings_path)) {
         Settings::load(Settings::settings_path);
     } else {
-        Settings::json_settings[Settings::IS_ADDON_ENABLED] = Settings::is_addon_enabled;
         Settings::json_settings[Settings::SESSIONS_PATH] = Settings::sessions_path;
         Settings::save(Settings::settings_path);
         std::filesystem::create_directories(Settings::sessions_path);
     }
-    api->QuickAccess.Add("QA_SESSION", "ICON_SESSION", "ICON_SESSION_HOVER", "KB_SESSION_TOGGLE", "Session Tracker");
     load_textures();
     load_start_session();
-    api->InputBinds.RegisterWithString("KB_SESSION_TOGGLE", keybind_handler, "((null))");
     current_session.start_time = std::chrono::system_clock::now();
     api->Log(ELogLevel_INFO, addon_name, "addon loaded!");
 }
@@ -92,16 +88,21 @@ void addon_unload()
     api = nullptr;
 }
 
-bool tmp_open = true;
+bool window_open = false;
 void addon_render()
 {
-    ImGui::SetNextWindowPos(ImVec2(300, 400), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowBgAlpha(Settings::window_alpha);
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse;
     if (Settings::lock_window)
         flags |= ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoBackground;
-    if (tmp_open && ImGui::Begin("Session Tracker##SessionMainWindow", &tmp_open, flags)) {
+    ImGui::SetNextWindowPos(ImVec2(300, 400), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowBgAlpha(Settings::window_alpha);
+    if (ImGui::Begin("Session Tracker##SessionMainWindow", &window_open, flags)) {
         check_session();
+        auto next = last_session_check + std::chrono::minutes(5);
+        auto now = std::chrono::system_clock::now();
+        auto minutes = std::chrono::duration_cast<std::chrono::minutes>(next - now);
+        auto seconds = std::chrono::duration_cast<std::chrono::seconds>(next - now - minutes);
+        ImGui::Text("Next update in: %d:%lld", minutes.count(), seconds.count());
         render_tracker();
         ImGui::End();
     }
@@ -110,12 +111,12 @@ void addon_render()
 #include <imgui/misc/cpp/imgui_stdlib.h>
 void addon_options()
 {
-    if (ImGui::Checkbox("Enabled##SessionEnabled", &Settings::is_addon_enabled)) {
-        Settings::json_settings[Settings::IS_ADDON_ENABLED] = Settings::is_addon_enabled;
-        Settings::save(Settings::settings_path);
-    }
     if (ImGui::Checkbox("Display help##SessionDisplayHelp", &Settings::display_help)) {
         Settings::json_settings[Settings::DISPLAY_HELP] = Settings::display_help;
+        Settings::save(Settings::settings_path);
+    }
+    if (ImGui::Checkbox("Save sessions to CSV ! Experimental !##SessionSaveSessions", &Settings::save_sessions)) {
+        Settings::json_settings[Settings::SAVE_SESSIONS] = Settings::save_sessions;
         Settings::save(Settings::settings_path);
     }
     if (ImGui::Checkbox("Lock Window##SessionLockWindow", &Settings::lock_window)) {
@@ -146,12 +147,5 @@ void addon_options()
             ImGui::SameLine();
             ImGui::Image(texture->Resource, ImVec2(16, 16));
         }
-    }
-}
-
-void keybind_handler(const char *identifier, bool is_release)
-{
-    if (!strcmp(identifier, "KB_SESSION_TOGGLE")) {
-        tmp_open = !tmp_open;
     }
 }

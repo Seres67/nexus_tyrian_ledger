@@ -28,7 +28,7 @@ void load_start_session()
 
 void save_session()
 {
-    if (!Settings::is_addon_enabled)
+    if (!Settings::save_sessions)
         return;
     std::thread(
         []()
@@ -78,7 +78,7 @@ void save_session()
 
 void save_session_sync()
 {
-    if (!Settings::is_addon_enabled)
+    if (!Settings::save_sessions)
         return;
 
     auto current_time = std::chrono::system_clock::now();
@@ -141,8 +141,6 @@ void pull_session()
 
 void check_session()
 {
-    if (!Settings::is_addon_enabled)
-        return;
     if (const auto current_time = std::chrono::system_clock::now();
         current_time - last_session_check > std::chrono::minutes(5)) {
         api->Log(ELogLevel_INFO, addon_name, "Checking session");
