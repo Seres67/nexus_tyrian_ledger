@@ -42,12 +42,12 @@ extern "C" __declspec(dllexport) AddonDefinition *GetAddonDef()
     addon_def.Version.Build = 0;
     addon_def.Version.Revision = 1;
     addon_def.Author = "Seres67";
-    addon_def.Description = "A Nexus addon to track your current session.";
+    addon_def.Description = "A Nexus addon to track your current game session.";
     addon_def.Load = addon_load;
     addon_def.Unload = addon_unload;
     addon_def.Flags = EAddonFlags_None;
     addon_def.Provider = EUpdateProvider_GitHub;
-    addon_def.UpdateLink = "https://github.com/Seres67/nexus_session_tracker";
+    addon_def.UpdateLink = "https://github.com/Seres67/nexus_tyrian_ledger";
 
     return &addon_def;
 }
@@ -62,8 +62,8 @@ void addon_load(AddonAPI *api_p)
     api->Renderer.Register(ERenderType_Render, addon_render);
     api->Renderer.Register(ERenderType_OptionsRender, addon_options);
 
-    Settings::settings_path = api->Paths.GetAddonDirectory("session_tracker\\settings.json");
-    Settings::sessions_path = api->Paths.GetAddonDirectory("session_tracker\\sessions");
+    Settings::settings_path = api->Paths.GetAddonDirectory("tyrian_ledger\\settings.json");
+    Settings::sessions_path = api->Paths.GetAddonDirectory("tyrian_ledger\\sessions");
     if (std::filesystem::exists(Settings::settings_path)) {
         Settings::load(Settings::settings_path);
     } else {
@@ -81,7 +81,7 @@ void addon_unload()
 {
     api->Log(ELogLevel_INFO, addon_name, "unloading addon...");
     save_session_sync();
-    api->QuickAccess.Remove("QA_SESSION");
+    /*api->QuickAccess.Remove("QA_TYRIAN_LEDGER");*/
     api->Renderer.Deregister(addon_render);
     api->Renderer.Deregister(addon_options);
     api->Log(ELogLevel_INFO, addon_name, "addon unloaded!");
@@ -96,7 +96,7 @@ void addon_render()
         flags |= ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoBackground;
     ImGui::SetNextWindowPos(ImVec2(300, 400), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowBgAlpha(Settings::window_alpha);
-    if (ImGui::Begin("Session Tracker##SessionMainWindow", &window_open, flags)) {
+    if (ImGui::Begin("Tyrian Ledger##Tyrian LedgerMainWindow", &window_open, flags)) {
         check_session();
         auto next = last_session_check + std::chrono::minutes(5);
         auto now = std::chrono::system_clock::now();
@@ -111,23 +111,23 @@ void addon_render()
 #include <imgui/misc/cpp/imgui_stdlib.h>
 void addon_options()
 {
-    if (ImGui::Checkbox("Display help##SessionDisplayHelp", &Settings::display_help)) {
+    if (ImGui::Checkbox("Display help##TyrianLedgerDisplayHelp", &Settings::display_help)) {
         Settings::json_settings[Settings::DISPLAY_HELP] = Settings::display_help;
         Settings::save(Settings::settings_path);
     }
-    if (ImGui::Checkbox("Save sessions to CSV ! Experimental !##SessionSaveSessions", &Settings::save_sessions)) {
+    if (ImGui::Checkbox("Save sessions to CSV! Experimental!##TyrianLedgerSaveSessions", &Settings::save_sessions)) {
         Settings::json_settings[Settings::SAVE_SESSIONS] = Settings::save_sessions;
         Settings::save(Settings::settings_path);
     }
-    if (ImGui::Checkbox("Lock Window##SessionLockWindow", &Settings::lock_window)) {
+    if (ImGui::Checkbox("Lock Window##TyrianLedgerLockWindow", &Settings::lock_window)) {
         Settings::json_settings[Settings::LOCK_WINDOW] = Settings::lock_window;
         Settings::save(Settings::settings_path);
     }
-    if (ImGui::SliderFloat("Window Opacity##SessionOpacity", &Settings::window_alpha, 0.f, 1.f)) {
+    if (ImGui::SliderFloat("Window Opacity##TyrianLedgerOpacity", &Settings::window_alpha, 0.f, 1.f)) {
         Settings::json_settings[Settings::WINDOW_ALPHA] = Settings::window_alpha;
         Settings::save(Settings::settings_path);
     }
-    if (ImGui::InputText("API Key##SessionAPIKey", &Settings::api_key, ImGuiInputTextFlags_Password)) {
+    if (ImGui::InputText("API Key##TyrianLedgerAPIKey", &Settings::api_key, ImGuiInputTextFlags_Password)) {
         Settings::json_settings[Settings::API_KEY] = Settings::api_key;
         Settings::save(Settings::settings_path);
     }
@@ -139,10 +139,10 @@ void addon_options()
                       [](const Currency &a, const Currency &b) { return a.name < b.name; }); // NOLINT
     for (auto &[name, id, icon, _show] : sorted_currencies) {
         if (ImGui::Checkbox(name.c_str(), &currencies_list[id].show)) {
-            Settings::json_settings[std::string("SESSION_").append(name)] = currencies_list[id].show;
+            Settings::json_settings[std::string("TYRIAN_LEDGER_").append(name)] = currencies_list[id].show;
             Settings::save(Settings::settings_path);
         }
-        if (const auto texture = api->Textures.Get(std::string("SESSION_ICON_").append(name).c_str());
+        if (const auto texture = api->Textures.Get(std::string("TYRIAN_LEDGER_ICON_").append(name).c_str());
             texture != nullptr) {
             ImGui::SameLine();
             ImGui::Image(texture->Resource, ImVec2(16, 16));

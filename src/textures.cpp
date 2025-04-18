@@ -19,16 +19,17 @@ void load_textures()
                      const auto &currency : currencies_json) {
                     if (currency["name"].get<std::string>().empty())
                         continue;
-                    if (!Settings::json_settings.contains(std::string("SESSION_").append(currency["name"])))
-                        Settings::json_settings[std::string("SESSION_").append(currency["name"])] = false;
+                    if (!Settings::json_settings.contains(std::string("TYRIAN_LEDGER_").append(currency["name"])))
+                        Settings::json_settings[std::string("TYRIAN_LEDGER_").append(currency["name"])] = false;
                     currencies_list[currency["id"]] = {
                         currency["name"], currency["id"], currency["icon"],
-                        Settings::json_settings[std::string("SESSION_").append(currency["name"])]};
+                        Settings::json_settings[std::string("TYRIAN_LEDGER_").append(currency["name"])]};
                     auto url = currency["icon"].get<std::string>();
                     const auto pos = url.find('/', url.find("//") + 2);
                     std::string remote = url.substr(0, pos);
                     std::string endpoint = url.substr(pos);
-                    std::string identifier = std::string("SESSION_ICON_").append(currency["name"].get<std::string>());
+                    std::string identifier =
+                        std::string("TYRIAN_LEDGER_ICON_").append(currency["name"].get<std::string>());
                     if (api->Textures.Get(identifier.c_str()) == nullptr)
                         api->Textures.LoadFromURL(identifier.c_str(), remote.c_str(), endpoint.c_str(), nullptr);
                 }

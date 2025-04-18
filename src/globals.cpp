@@ -3,7 +3,7 @@
 HMODULE self_module = nullptr;
 AddonDefinition addon_def{};
 AddonAPI *api = nullptr;
-char addon_name[] = "Session Tracker";
+char addon_name[] = "Tyrian Ledger";
 HWND game_handle = nullptr;
 Session current_session{};
 std::map<int, Currency> currencies_list{};

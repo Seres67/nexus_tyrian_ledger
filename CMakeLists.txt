@@ -7,7 +7,7 @@ if (UNIX)
     set(TOOLCHAIN_PREFIX x86_64-w64-mingw32)
 
     # cross compilers to use for C, C++ and Fortran
-    set(PRIVATE_MINGW_PATH /usr/sbin)
+    set(PRIVATE_MINGW_PATH /usr/bin)
     set(CMAKE_C_COMPILER ${PRIVATE_MINGW_PATH}/${TOOLCHAIN_PREFIX}-gcc)
     set(CMAKE_CXX_COMPILER ${PRIVATE_MINGW_PATH}/${TOOLCHAIN_PREFIX}-g++)
     set(CMAKE_Fortran_COMPILER ${PRIVATE_MINGW_PATH}/${TOOLCHAIN_PREFIX}-gfortran)
@@ -24,7 +24,7 @@ if (UNIX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -O2")
 endif ()
 
-project(nexus_session)
+project(nexus_tyrian_ledger)
 
 include_directories(include)
 
@@ -38,14 +38,14 @@ FetchContent_Declare(cpr GIT_REPOSITORY https://github.com/libcpr/cpr.git
         GIT_TAG 3b15fa82ea74739b574d705fea44959b58142eb8) # Replace with your desired git commit from: https://github.com/libcpr/cpr/releases
 FetchContent_MakeAvailable(cpr)
 
-add_library(nexus_session SHARED src/main.cpp src/globals.cpp src/gui.cpp src/settings.cpp src/textures.cpp src/session.cpp)
-target_link_libraries(nexus_session PRIVATE imgui cpr::cpr)
-#set_property(TARGET nexus_session PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+add_library(nexus_tyrian_ledger SHARED src/main.cpp src/globals.cpp src/gui.cpp src/settings.cpp src/textures.cpp src/session.cpp)
+target_link_libraries(nexus_tyrian_ledger PRIVATE imgui cpr::cpr)
+#set_property(TARGET nexus_tyrian_ledger PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 # copy dll to game directory
-add_custom_command(TARGET nexus_session
+add_custom_command(TARGET nexus_tyrian_ledger
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_FILE:nexus_session>
-        "C:\\Games\\Guild Wars 2\\addons\\nexus_session.dll.update"
-        COMMENT "Copying nexus_session.dll.update to game directory"
+        $<TARGET_FILE:nexus_tyrian_ledger>
+        "C:\\Games\\Guild Wars 2\\addons\\nexus_tyrian_ledger.dll.update"
+        COMMENT "Copying nexus_tyrian_ledger.dll.update to game directory"
 )
