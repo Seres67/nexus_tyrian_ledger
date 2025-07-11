@@ -27,6 +27,11 @@ stdenv.mkDerivation {
     cp ./*.dll $out/lib
   '';
 
+  postBuild = ''
+    mkdir -p $out/share
+    cp ./compile_commands.json $out/share/
+  '';
+
   nativeBuildInputs = [
     cmake
     pkg-config

@@ -23,7 +23,6 @@
     };
     flake-utils = {
       url = "github:numtide/flake-utils";
-      inputs.nixpkgs.follows = "nixpkgs";
     };
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   };
@@ -34,26 +33,20 @@
     ...
   } @ inputs:
     flake-utils.lib.eachDefaultSystem (system: let
-      pkgs = (import nixpkgs) {
+      pkgs = import inputs.nixpkgs {
         inherit system;
-        crossSystem.config = "x86_64-w64-mingw32";
       };
 
-      nexusTyrianLedger = pkgs.callPackage ./package.nix {
-        inherit pkgs;
-        inherit (inputs) imgui;
-        inherit (inputs) mumble;
-        inherit (inputs) nexus;
-        inherit (inputs) cpr;
+      crossPkgs = import inputs.nixpkgs {
+        system = "x86_64-linux";
+        crossSystem = {
+          config = "x86_64-w64-mingw32";
+        };
       };
     in {
-      inherit pkgs;
-      devShell = {
-        default = nexusTyrianLedger.devShell;
+      packages.default = crossPkgs.callPackage ./package.nix {
+        inherit (inputs) imgui mumble nexus cpr;
       };
-      packages = {
-        inherit nexusTyrianLedger;
-        default = nexusTyrianLedger;
-      };
+      devShells.default = import ./shell.nix {inherit pkgs;};
     });
 }
