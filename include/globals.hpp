@@ -1,9 +1,9 @@
 #ifndef GLOBALS_HPP
 #define GLOBALS_HPP
 
+#include "../include/session.hpp"
+#include "../modules/nexus/Nexus.h"
 #include <map>
-#include <nexus/Nexus.h>
-#include <session.hpp>
 #include <unordered_map>
 
 // handle to self hmodule
@@ -31,6 +31,5 @@ extern std::unordered_map<int, int> currencies_start;
 extern std::unordered_map<int, int> currencies;
 
 extern std::chrono::time_point<std::chrono::system_clock> last_session_check;
-
 
 #endif // GLOBALS_HPP

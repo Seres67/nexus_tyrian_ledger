@@ -1,10 +1,10 @@
-#include "settings.hpp"
-#include "nlohmann/json.hpp"
+#include "../include/settings.hpp"
+#include "../include/globals.hpp"
 #include <filesystem>
 #include <fstream>
-#include <globals.hpp>
+#include <nlohmann/json.hpp>
 
-#include <nexus/Nexus.h>
+#include "../modules/nexus/Nexus.h"
 
 using json = nlohmann::json;
 namespace Settings

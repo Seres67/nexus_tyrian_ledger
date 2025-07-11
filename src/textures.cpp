@@ -2,11 +2,11 @@
 // Created by Seres67 on 25/08/2024.
 //
 
-#include "textures.hpp"
+#include "../include/textures.hpp"
+#include "../include/globals.hpp"
+#include "../include/settings.hpp"
+#include "../modules/nexus/Nexus.h"
 #include <cpr/api.h>
-#include <globals.hpp>
-#include <nexus/Nexus.h>
-#include <settings.hpp>
 
 void load_textures()
 {
