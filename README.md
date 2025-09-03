@@ -6,13 +6,13 @@ A Nexus addon to track your current game session.
 
 1. Install [Nexus](https://raidcore.gg/Nexus).
 2. Download the latest release from the [Releases](https://github.com/Seres67/nexus_tyrian_ledger/releases) page.
-3. Place the `nexus_session.dll` file in the `<GW2>\addons` folder. 
+3. Place the `nexus_tyrian_ledger.dll` file in the `<GW2>\addons` folder. 
 4. Launch the game.
 5. Load the addon in Nexus.
 
 ## Usage
 
-The addon is enabled by default. To open the notes window, press the `Session Tracker` button in the Quick Access menu.
+The addon is enabled by default.
 
 ## License
 
