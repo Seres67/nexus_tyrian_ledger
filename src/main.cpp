@@ -98,7 +98,7 @@ void addon_render()
         std::chrono::time_point<std::chrono::system_clock> next;
         {
             std::lock_guard lock(session_mutex);
-            next = last_session_check + std::chrono::minutes(5);
+            next = last_session_check + std::chrono::minutes(5) + std::chrono::seconds(1);
         }
         const auto now = std::chrono::system_clock::now();
         const auto minutes = std::chrono::duration_cast<std::chrono::minutes>(next - now);

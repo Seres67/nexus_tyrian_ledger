@@ -156,7 +156,7 @@ void pull_session()
 void check_session()
 {
     const auto current_time = std::chrono::system_clock::now();
-    if (current_time - last_session_check > std::chrono::minutes(5)) {
+    if (current_time - last_session_check > std::chrono::minutes(5) + std::chrono::seconds(1)) {
         api->Log(ELogLevel_INFO, addon_name, "Checking session");
         {
             std::lock_guard<std::mutex> lock(session_mutex);
