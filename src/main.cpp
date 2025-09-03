@@ -1,12 +1,9 @@
-#include "cpr/api.h"
-#include "globals.hpp"
-#include "session.hpp"
-
-#include <fstream>
+#include <globals.hpp>
 #include <gui.hpp>
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 #include <nexus/Nexus.h>
+#include <session.hpp>
 #include <settings.hpp>
 #include <textures.hpp>
 #include <windows.h>
@@ -16,7 +13,7 @@ void addon_unload();
 void addon_render();
 void addon_options();
 
-BOOL APIENTRY dll_main(const HMODULE hModule, const DWORD ul_reason_for_call, LPVOID lpReserved)
+BOOL APIENTRY dll_main(const HMODULE hModule, const DWORD ul_reason_for_call, [[maybe_unused]] LPVOID lpReserved)
 {
     switch (ul_reason_for_call) {
     case DLL_PROCESS_ATTACH:
@@ -57,8 +54,8 @@ void addon_load(AddonAPI *api_p)
     api = api_p;
 
     ImGui::SetCurrentContext(static_cast<ImGuiContext *>(api->ImguiContext));
-    ImGui::SetAllocatorFunctions(static_cast<void *(*)(size_t, void *)>(api->ImguiMalloc),
-                                 static_cast<void (*)(void *, void *)>(api->ImguiFree)); // on imgui 1.80+
+    ImGui::SetAllocatorFunctions(reinterpret_cast<void *(*)(size_t, void *)>(api->ImguiMalloc),
+                                 reinterpret_cast<void (*)(void *, void *)>(api->ImguiFree)); // on imgui 1.80+
     api->Renderer.Register(ERenderType_Render, addon_render);
     api->Renderer.Register(ERenderType_OptionsRender, addon_options);
 
@@ -98,10 +95,14 @@ void addon_render()
     ImGui::SetNextWindowBgAlpha(Settings::window_alpha);
     if (ImGui::Begin("Tyrian Ledger##Tyrian LedgerMainWindow", &window_open, flags)) {
         check_session();
-        auto next = last_session_check + std::chrono::minutes(5);
-        auto now = std::chrono::system_clock::now();
-        auto minutes = std::chrono::duration_cast<std::chrono::minutes>(next - now);
-        auto seconds = std::chrono::duration_cast<std::chrono::seconds>(next - now - minutes);
+        std::chrono::time_point<std::chrono::system_clock> next;
+        {
+            std::lock_guard lock(session_mutex);
+            next = last_session_check + std::chrono::minutes(5);
+        }
+        const auto now = std::chrono::system_clock::now();
+        const auto minutes = std::chrono::duration_cast<std::chrono::minutes>(next - now);
+        const auto seconds = std::chrono::duration_cast<std::chrono::seconds>(next - now - minutes);
         ImGui::Text("Next update in: %d:%lld", minutes.count(), seconds.count());
         render_tracker();
         ImGui::End();
@@ -115,10 +116,11 @@ void addon_options()
         Settings::json_settings[Settings::DISPLAY_HELP] = Settings::display_help;
         Settings::save(Settings::settings_path);
     }
-    if (ImGui::Checkbox("Save sessions to CSV! Experimental!##TyrianLedgerSaveSessions", &Settings::save_sessions)) {
-        Settings::json_settings[Settings::SAVE_SESSIONS] = Settings::save_sessions;
+    if (ImGui::InputText("API Key##TyrianLedgerAPIKey", &Settings::api_key, ImGuiInputTextFlags_Password)) {
+        Settings::json_settings[Settings::API_KEY] = Settings::api_key;
         Settings::save(Settings::settings_path);
     }
+
     if (ImGui::Checkbox("Lock Window##TyrianLedgerLockWindow", &Settings::lock_window)) {
         Settings::json_settings[Settings::LOCK_WINDOW] = Settings::lock_window;
         Settings::save(Settings::settings_path);
@@ -127,8 +129,9 @@ void addon_options()
         Settings::json_settings[Settings::WINDOW_ALPHA] = Settings::window_alpha;
         Settings::save(Settings::settings_path);
     }
-    if (ImGui::InputText("API Key##TyrianLedgerAPIKey", &Settings::api_key, ImGuiInputTextFlags_Password)) {
-        Settings::json_settings[Settings::API_KEY] = Settings::api_key;
+    ImGui::TextColored({1.0, 1.0, 0, .933}, "Experimental");
+    if (ImGui::Checkbox("Save sessions to CSV##TyrianLedgerSaveSessions", &Settings::save_sessions)) {
+        Settings::json_settings[Settings::SAVE_SESSIONS] = Settings::save_sessions;
         Settings::save(Settings::settings_path);
     }
     std::vector<Currency> sorted_currencies;

@@ -1,12 +1,8 @@
-//
-// Created by Seres67 on 25/08/2024.
-//
-
-#include "textures.hpp"
 #include <cpr/api.h>
 #include <globals.hpp>
 #include <nexus/Nexus.h>
 #include <settings.hpp>
+#include <textures.hpp>
 
 void load_textures()
 {

@@ -1,7 +1,3 @@
-//
-// Created by Seres67 on 25/08/2024.
-//
-
 #ifndef SESSION_HPP
 #define SESSION_HPP
 

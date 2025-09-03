@@ -2,6 +2,7 @@
 #define GLOBALS_HPP
 
 #include <map>
+#include <mutex>
 #include <nexus/Nexus.h>
 #include <session.hpp>
 #include <unordered_map>
@@ -30,7 +31,7 @@ extern std::map<int, Currency> currencies_list;
 extern std::unordered_map<int, int> currencies_start;
 extern std::unordered_map<int, int> currencies;
 
+extern std::mutex session_mutex;
 extern std::chrono::time_point<std::chrono::system_clock> last_session_check;
-
 
 #endif // GLOBALS_HPP

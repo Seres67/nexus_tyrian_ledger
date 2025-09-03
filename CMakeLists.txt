@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.18)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_EXPORT_COMPILE_COMMANDS YES)
 if (UNIX)
     set(CMAKE_SYSTEM_NAME Windows)
@@ -35,7 +35,7 @@ add_subdirectory(src/imgui)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libs")
 include(FetchContent)
 FetchContent_Declare(cpr GIT_REPOSITORY https://github.com/libcpr/cpr.git
-        GIT_TAG 3b15fa82ea74739b574d705fea44959b58142eb8) # Replace with your desired git commit from: https://github.com/libcpr/cpr/releases
+        GIT_TAG da40186618909b1a7363d4e4495aa899c6e0eb75) # Replace with your desired git commit from: https://github.com/libcpr/cpr/releases
 FetchContent_MakeAvailable(cpr)
 
 add_library(nexus_tyrian_ledger SHARED src/main.cpp src/globals.cpp src/gui.cpp src/settings.cpp src/textures.cpp src/session.cpp)
@@ -43,7 +43,7 @@ target_link_libraries(nexus_tyrian_ledger PRIVATE imgui cpr::cpr)
 #set_property(TARGET nexus_tyrian_ledger PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 # copy dll to game directory
-add_custom_command(TARGET nexus_tyrian_ledger
+add_custom_command(TARGET nexus_tyrian_ledger POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         $<TARGET_FILE:nexus_tyrian_ledger>
         "C:\\Games\\Guild Wars 2\\addons\\nexus_tyrian_ledger.dll.update"

@@ -1,15 +1,13 @@
-#include "settings.hpp"
-#include "nlohmann/json.hpp"
 #include <filesystem>
 #include <fstream>
 #include <globals.hpp>
-
 #include <nexus/Nexus.h>
+#include <nlohmann/json.hpp>
+#include <settings.hpp>
 
 using json = nlohmann::json;
 namespace Settings
 {
-const char *IS_ADDON_ENABLED = "IsAddonEnabled";
 const char *SESSIONS_PATH = "SessionsPath";
 const char *SAVE_SESSIONS = "SaveSessions";
 const char *WINDOW_ALPHA = "WindowAlpha";
