@@ -123,10 +123,10 @@ void save_session_sync()
     api->Log(ELogLevel_INFO, addon_name, "Opening file...");
     output_file << current_session.start_time.time_since_epoch().count() << '\n';
     output_file << current_session.end_time.time_since_epoch().count() << '\n';
-    output_file << "Name,Value\n";
+    output_file << "Name,Value,Difference\n";
     api->Log(ELogLevel_INFO, addon_name, "Saving currrency data...");
     for (const auto &[id, value] : currencies) {
-        output_file << currencies_list[id].name << "," << value << '\n';
+        output_file << currencies_list[id].name << "," << value << "," << currencies_start[id] << '\n';
     }
     api->Log(ELogLevel_INFO, addon_name, "Closing file...");
     output_file.close();
