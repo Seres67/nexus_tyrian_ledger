@@ -1,10 +1,10 @@
-#include "../include/gui.hpp"
-#include "../include/globals.hpp"
+#include "gui.hpp"
+#include "globals.hpp"
 
-#include "../include/settings.hpp"
-#include "../modules/imgui/imgui.h"
 #include <algorithm>
+#include <imgui/imgui.h>
 #include <ranges>
+#include <settings.hpp>
 
 void render_tracker()
 {
@@ -30,7 +30,7 @@ void render_tracker()
         if (texture != nullptr) {
             ImGui::Image(texture->Resource, ImVec2(16, 16));
             ImGui::SameLine();
-            ImGui::Text(": %s", name.c_str());
+            ImGui::Text(": ", name.c_str());
         } else
             ImGui::Text("%s: ", name.c_str());
         ImGui::SameLine();

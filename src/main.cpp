@@ -1,13 +1,14 @@
-#include "../include/globals.hpp"
-#include "../include/session.hpp"
+#include "cpr/api.h"
+#include "globals.hpp"
+#include "session.hpp"
 
-#include "../include/gui.hpp"
-#include "../include/settings.hpp"
-#include "../include/textures.hpp"
-#include "../modules/imgui/imgui.h"
-#include "../modules/imgui/imgui_internal.h"
-#include "../modules/nexus/Nexus.h"
 #include <fstream>
+#include <gui.hpp>
+#include <imgui/imgui.h>
+#include <imgui/imgui_internal.h>
+#include <nexus/Nexus.h>
+#include <settings.hpp>
+#include <textures.hpp>
 #include <windows.h>
 
 void addon_load(AddonAPI *api_p);
@@ -55,9 +56,9 @@ void addon_load(AddonAPI *api_p)
 {
     api = api_p;
 
-    ImGui::SetCurrentContext(reinterpret_cast<ImGuiContext *>(api->ImguiContext));
-    ImGui::SetAllocatorFunctions(reinterpret_cast<void *(*)(size_t, void *)>(api->ImguiMalloc),
-                                 reinterpret_cast<void (*)(void *, void *)>(api->ImguiFree)); // on imgui 1.80+
+    ImGui::SetCurrentContext(static_cast<ImGuiContext *>(api->ImguiContext));
+    ImGui::SetAllocatorFunctions(static_cast<void *(*)(size_t, void *)>(api->ImguiMalloc),
+                                 static_cast<void (*)(void *, void *)>(api->ImguiFree)); // on imgui 1.80+
     api->Renderer.Register(ERenderType_Render, addon_render);
     api->Renderer.Register(ERenderType_OptionsRender, addon_options);
 
@@ -101,13 +102,13 @@ void addon_render()
         auto now = std::chrono::system_clock::now();
         auto minutes = std::chrono::duration_cast<std::chrono::minutes>(next - now);
         auto seconds = std::chrono::duration_cast<std::chrono::seconds>(next - now - minutes);
-        ImGui::Text("Next update in: %lld:%lld", minutes.count(), seconds.count());
+        ImGui::Text("Next update in: %d:%lld", minutes.count(), seconds.count());
         render_tracker();
         ImGui::End();
     }
 }
 
-#include "../modules/imgui/misc/cpp/imgui_stdlib.h"
+#include <imgui/misc/cpp/imgui_stdlib.h>
 void addon_options()
 {
     if (ImGui::Checkbox("Display help##TyrianLedgerDisplayHelp", &Settings::display_help)) {

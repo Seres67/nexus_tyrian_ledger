@@ -2,11 +2,11 @@
 // Created by Seres67 on 25/08/2024.
 //
 
-#include "../include/session.hpp"
-#include "../include/globals.hpp"
-#include "../include/settings.hpp"
 #include <cpr/api.h>
 #include <fstream>
+#include <globals.hpp>
+#include <session.hpp>
+#include <settings.hpp>
 
 void load_start_session()
 {

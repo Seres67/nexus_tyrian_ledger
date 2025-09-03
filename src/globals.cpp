@@ -1,4 +1,4 @@
-#include "../include/globals.hpp"
+#include "globals.hpp"
 
 HMODULE self_module = nullptr;
 AddonDefinition addon_def{};
