@@ -3,4 +3,3 @@ cmake-*/
 .cache/
 .idea/
 result
-compile_commands.json
