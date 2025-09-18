@@ -13,14 +13,20 @@ void load_start_session()
                 cpr::Get(cpr::Url{"https://api.guildwars2.com/v2/account?v=latest"}, cpr::Bearer{Settings::api_key});
             if (last_modified_check.status_code == 200) {
                 const auto last_modified = last_modified_check.header.at("Last-Modified");
+                if (!api)
+                    return;
                 api->Log(ELogLevel_DEBUG, addon_name, last_modified.c_str());
                 std::istringstream in{last_modified};
                 std::chrono::sys_seconds tp;
 
                 std::chrono::from_stream(in, "%a, %d %b %Y %H:%M:%S GMT", tp);
                 const std::string ts = std::format("{:%Y-%m-%d %H:%M:%S}", tp);
+                if (!api)
+                    return;
                 api->Log(ELogLevel_DEBUG, addon_name, ts.c_str());
                 if (!in) {
+                    if (!api)
+                        return;
                     api->Log(ELogLevel_DEBUG, addon_name, "could not parse last_modified");
                 }
                 {
@@ -37,6 +43,8 @@ void load_start_session()
                 current_session.start_time = std::chrono::system_clock::now();
 
             } else {
+                if (!api)
+                    return;
                 api->Log(ELogLevel_WARNING, addon_name, response2.text.c_str());
             }
         })
@@ -144,9 +152,15 @@ void pull_session()
                 for (auto wallet = nlohmann::json::parse(response.text); const auto &curr : wallet) {
                     currencies[curr["id"]] = curr["value"];
                 }
+                if (!api)
+                    return;
                 api->Log(ELogLevel_INFO, addon_name, "Session pulled!");
             } else {
+                if (!api)
+                    return;
                 api->Log(ELogLevel_WARNING, addon_name, "Failed to pull session");
+                if (!api)
+                    return;
                 api->Log(ELogLevel_WARNING, addon_name, response.text.c_str());
             }
         })

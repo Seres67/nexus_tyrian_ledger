@@ -26,10 +26,14 @@ void load_textures()
                     std::string endpoint = url.substr(pos);
                     std::string identifier =
                         std::string("TYRIAN_LEDGER_ICON_").append(currency["name"].get<std::string>());
+                    if (!api)
+                        return;
                     if (api->Textures.Get(identifier.c_str()) == nullptr)
                         api->Textures.LoadFromURL(identifier.c_str(), remote.c_str(), endpoint.c_str(), nullptr);
                 }
             } else {
+                if (!api)
+                    return;
                 api->Log(ELogLevel_WARNING, addon_name, response.text.c_str());
             }
         })
