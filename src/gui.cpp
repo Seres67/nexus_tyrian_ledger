@@ -105,9 +105,10 @@ void addon_render()
             next = last_session_check + std::chrono::minutes(5) + std::chrono::seconds(1);
         }
         const auto now = std::chrono::system_clock::now();
-        const auto minutes = std::chrono::duration_cast<std::chrono::minutes>(next - now);
-        const auto seconds = std::chrono::duration_cast<std::chrono::seconds>(next - now - minutes);
-        ImGui::Text("Next update in: %lld:%lld", minutes.count(), seconds.count());
+        auto countdown = std::chrono::duration_cast<std::chrono::seconds>(next - now);
+        if (countdown.count() < 0)
+            countdown = std::chrono::seconds(0);
+        ImGui::Text("Next update in: %lld:%02lld", countdown.count() / 60, countdown.count() % 60);
         render_tracker();
         ImGui::End();
     }

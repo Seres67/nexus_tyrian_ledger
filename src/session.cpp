@@ -13,40 +13,45 @@ void load_start_session()
     std::thread(
         []()
         {
-            httplib::Headers headers = {{"Authorization", std::format("Bearer {}", Settings::api_key)}};
             httplib::Client cli("https://api.guildwars2.com");
-            const auto last_modified_check = cli.Get("/v2/account?v=latest", headers);
-            if (last_modified_check->status == 200) {
-                const auto last_modified = last_modified_check->get_header_value("Last-Modified");
+            httplib::Headers headers = {{"Authorization", std::format("Bearer {}", Settings::api_key)}};
+
+            if (auto res = cli.Get("/v2/account?v=latest", headers); res && res->status == 200) {
+                auto account_json = nlohmann::json::parse(res->body);
+                const std::string last_modified_str = account_json["last_modified"].get<std::string>();
+
                 if (!api)
                     return;
-                std::istringstream in{last_modified};
-                std::chrono::sys_seconds tp;
-                std::chrono::from_stream(in, "%a, %d %b %Y %H:%M:%S GMT", tp);
-                const std::string ts = std::format("{:%Y-%m-%d %H:%M:%S}", tp);
-                if (!api)
-                    return;
+                api->Log(ELogLevel_DEBUG, addon_name, last_modified_str.c_str());
+
+                std::istringstream in(last_modified_str);
+                std::chrono::sys_time<std::chrono::seconds> last_modified_tp;
+                in >> std::chrono::parse("%FT%TZ", last_modified_tp);
+
                 if (!in) {
                     if (!api)
                         return;
-                    api->Log(ELogLevel_DEBUG, addon_name, "could not parse last_modified");
-                }
-                {
-                    std::lock_guard<std::mutex> lock(session_mutex);
-                    last_session_check = tp;
+                    api->Log(ELogLevel_DEBUG, addon_name, "Failed to parse last_modified");
+                } else {
+                    std::lock_guard lock(session_mutex);
+                    last_session_check = last_modified_tp;
                 }
             }
-            const auto response2 = cli.Get("/v2/account/wallet", headers);
-            if (response2->status == 200) {
-                for (auto wallet = nlohmann::json::parse(response2->body); const auto &curr : wallet) {
-                    currencies_start[curr["id"]] = curr["value"];
-                }
-                current_session.start_time = std::chrono::system_clock::now();
 
+            if (auto res = cli.Get("/v2/account/wallet", headers); res && res->status == 200) {
+                auto wallet_json = nlohmann::json::parse(res->body);
+                {
+                    std::lock_guard lock(session_mutex);
+                    currencies_start.clear();
+                    for (const auto &curr : wallet_json) {
+                        currencies_start[curr["id"]] = curr["value"];
+                    }
+                    current_session.start_time = std::chrono::system_clock::now();
+                }
             } else {
                 if (!api)
                     return;
-                api->Log(ELogLevel_WARNING, addon_name, response2->body.c_str());
+                api->Log(ELogLevel_WARNING, addon_name, res ? res->body.c_str() : "No response from wallet API");
             }
         })
         .detach();
@@ -172,11 +177,12 @@ void pull_session()
 void check_session()
 {
     const auto current_time = std::chrono::system_clock::now();
-    if (current_time - last_session_check > std::chrono::minutes(5) + std::chrono::seconds(1)) {
+    const auto next_update = last_session_check + std::chrono::minutes(5);
+    if (current_time >= next_update) {
         api->Log(ELogLevel_INFO, addon_name, "Checking session");
         {
             std::lock_guard<std::mutex> lock(session_mutex);
-            last_session_check = current_time;
+            last_session_check = next_update;
         }
         pull_session();
     }
