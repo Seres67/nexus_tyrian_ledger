@@ -1,6 +1,6 @@
-#include <cpr/api.h>
 #include <fstream>
 #include <globals.hpp>
+#include <httplib/httplib.h>
 #include <session.hpp>
 #include <settings.hpp>
 
@@ -9,10 +9,11 @@ void load_start_session()
     std::thread(
         []()
         {
-            const cpr::Response last_modified_check =
-                cpr::Get(cpr::Url{"https://api.guildwars2.com/v2/account?v=latest"}, cpr::Bearer{Settings::api_key});
-            if (last_modified_check.status_code == 200) {
-                const auto last_modified = last_modified_check.header.at("Last-Modified");
+            httplib::Headers headers = {{"Authorization", std::format("Bearer {}", Settings::api_key)}};
+            httplib::Client cli("https://api.guildwars2.com");
+            const auto last_modified_check = cli.Get("/v2/account?v=latest", headers);
+            if (last_modified_check->status == 200) {
+                const auto last_modified = last_modified_check->get_header_value("Last-Modified");
                 if (!api)
                     return;
                 api->Log(ELogLevel_DEBUG, addon_name, last_modified.c_str());
@@ -34,10 +35,9 @@ void load_start_session()
                     last_session_check = tp;
                 }
             }
-            cpr::Response response2 =
-                cpr::Get(cpr::Url{"https://api.guildwars2.com/v2/account/wallet"}, cpr::Bearer{Settings::api_key});
-            if (response2.status_code == 200) {
-                for (auto wallet = nlohmann::json::parse(response2.text); const auto &curr : wallet) {
+            const auto response2 = cli.Get("/v2/account/wallet", headers);
+            if (response2->status == 200) {
+                for (auto wallet = nlohmann::json::parse(response2->body); const auto &curr : wallet) {
                     currencies_start[curr["id"]] = curr["value"];
                 }
                 current_session.start_time = std::chrono::system_clock::now();
@@ -45,7 +45,7 @@ void load_start_session()
             } else {
                 if (!api)
                     return;
-                api->Log(ELogLevel_WARNING, addon_name, response2.text.c_str());
+                api->Log(ELogLevel_WARNING, addon_name, response2->body.c_str());
             }
         })
         .detach();
@@ -146,10 +146,11 @@ void pull_session()
     std::thread(
         []()
         {
-            const cpr::Response response =
-                cpr::Get(cpr::Url{"https://api.guildwars2.com/v2/account/wallet"}, cpr::Bearer{Settings::api_key});
-            if (response.status_code == 200) {
-                for (auto wallet = nlohmann::json::parse(response.text); const auto &curr : wallet) {
+            httplib::Client cli("https://api.guildwars2.com");
+            httplib::Headers headers = {{"Authorization", std::format("Bearer {}", Settings::api_key)}};
+            const auto response = cli.Get("/v2/account/wallet", headers);
+            if (response->status == 200) {
+                for (auto wallet = nlohmann::json::parse(response->body); const auto &curr : wallet) {
                     currencies[curr["id"]] = curr["value"];
                 }
                 if (!api)
@@ -161,7 +162,7 @@ void pull_session()
                 api->Log(ELogLevel_WARNING, addon_name, "Failed to pull session");
                 if (!api)
                     return;
-                api->Log(ELogLevel_WARNING, addon_name, response.text.c_str());
+                api->Log(ELogLevel_WARNING, addon_name, response->body.c_str());
             }
         })
         .detach();
