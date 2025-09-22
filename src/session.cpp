@@ -1,6 +1,5 @@
 
-#define CPPHTTPLIB_OPENSSL_SUPPORT
-#include <httplib/httplib.h>
+#include <win32-http.hpp>
 
 #include <filesystem>
 #include <fstream>
@@ -13,11 +12,10 @@ void load_start_session()
     std::thread(
         []()
         {
-            httplib::Client cli("https://api.guildwars2.com");
-            httplib::Headers headers = {{"Authorization", std::format("Bearer {}", Settings::api_key)}};
-
-            if (auto res = cli.Get("/v2/account?v=latest", headers); res && res->status == 200) {
-                auto account_json = nlohmann::json::parse(res->body);
+            auto [status, body] = win32_http::get("api.guildwars2.com", "/v2/account?v=latest",
+                                                  std::format("Authorization: Bearer {}", Settings::api_key));
+            if (status == 200) {
+                auto account_json = nlohmann::json::parse(body);
                 const std::string last_modified_str = account_json["last_modified"].get<std::string>();
 
                 if (!api)
@@ -37,9 +35,10 @@ void load_start_session()
                     last_session_check = last_modified_tp;
                 }
             }
-
-            if (auto res = cli.Get("/v2/account/wallet", headers); res && res->status == 200) {
-                auto wallet_json = nlohmann::json::parse(res->body);
+            auto [status2, body2] = win32_http::get("api.guildwars2.com", "/v2/account/wallet?v=latest",
+                                                    std::format("Authorization: Bearer {}", Settings::api_key));
+            if (status2 == 200) {
+                auto wallet_json = nlohmann::json::parse(body2);
                 {
                     std::lock_guard lock(session_mutex);
                     currencies_start.clear();
@@ -51,7 +50,7 @@ void load_start_session()
             } else {
                 if (!api)
                     return;
-                api->Log(ELogLevel_WARNING, addon_name, res ? res->body.c_str() : "No response from wallet API");
+                api->Log(ELogLevel_WARNING, addon_name, status2 ? body2.c_str() : "No response from wallet API");
             }
         })
         .detach();
@@ -152,11 +151,11 @@ void pull_session()
     std::thread(
         []()
         {
-            httplib::Client cli("https://api.guildwars2.com");
-            httplib::Headers headers = {{"Authorization", std::format("Bearer {}", Settings::api_key)}};
-            const auto response = cli.Get("/v2/account/wallet", headers);
-            if (response->status == 200) {
-                for (auto wallet = nlohmann::json::parse(response->body); const auto &curr : wallet) {
+            auto [status, body] = win32_http::get("api.guildwars2.com", "/v2/account/wallet",
+                                                  std::format("Authorization: Bearer {}", Settings::api_key));
+
+            if (status == 200) {
+                for (auto wallet = nlohmann::json::parse(body); const auto &curr : wallet) {
                     currencies[curr["id"]] = curr["value"];
                 }
                 if (!api)
@@ -168,7 +167,7 @@ void pull_session()
                 api->Log(ELogLevel_WARNING, addon_name, "Failed to pull session");
                 if (!api)
                     return;
-                api->Log(ELogLevel_WARNING, addon_name, response->body.c_str());
+                api->Log(ELogLevel_WARNING, addon_name, body.c_str());
             }
         })
         .detach();
@@ -181,7 +180,7 @@ void check_session()
     if (current_time >= next_update) {
         api->Log(ELogLevel_INFO, addon_name, "Checking session");
         {
-            std::lock_guard<std::mutex> lock(session_mutex);
+            std::lock_guard lock(session_mutex);
             last_session_check = next_update;
         }
         pull_session();

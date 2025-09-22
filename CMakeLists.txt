@@ -10,5 +10,5 @@ include_directories(include)
 add_subdirectory(src/imgui)
 
 add_library(nexus_tyrian_ledger SHARED src/main.cpp src/globals.cpp src/gui.cpp src/settings.cpp src/textures.cpp src/session.cpp)
-target_link_libraries(nexus_tyrian_ledger PRIVATE imgui)
+target_link_libraries(nexus_tyrian_ledger PRIVATE imgui wininet)
 set_property(TARGET nexus_tyrian_ledger PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")

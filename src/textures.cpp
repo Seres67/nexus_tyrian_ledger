@@ -1,5 +1,5 @@
-#define CPPHTTPLIB_OPENSSL_SUPPORT
-#include "httplib/httplib.h"
+#include "win32-http.hpp"
+
 #include <globals.hpp>
 #include <nexus/Nexus.h>
 #include <settings.hpp>
@@ -10,11 +10,9 @@ void load_textures()
     std::thread(
         []()
         {
-            httplib::Client cli("https://api.guildwars2.com");
-            const auto response = cli.Get("/v2/currencies?ids=all");
-            if (response->status == 200) {
-                for (auto currencies_json = nlohmann::json::parse(response->body);
-                     const auto &currency : currencies_json) {
+            auto [status, body] = win32_http::get("api.guildwars2.com", "/v2/currencies?ids=all", "");
+            if (status == 200) {
+                for (auto currencies_json = nlohmann::json::parse(body); const auto &currency : currencies_json) {
                     if (currency["name"].get<std::string>().empty())
                         continue;
                     if (!Settings::json_settings.contains(std::string("TYRIAN_LEDGER_").append(currency["name"])))
@@ -36,7 +34,7 @@ void load_textures()
             } else {
                 if (!api)
                     return;
-                api->Log(ELogLevel_WARNING, addon_name, response->body.c_str());
+                api->Log(ELogLevel_WARNING, addon_name, body.c_str());
             }
         })
         .detach();
