@@ -1,6 +1,10 @@
+
+#define CPPHTTPLIB_OPENSSL_SUPPORT
+#include <httplib/httplib.h>
+
+#include <filesystem>
 #include <fstream>
 #include <globals.hpp>
-#include <httplib/httplib.h>
 #include <session.hpp>
 #include <settings.hpp>
 
@@ -16,15 +20,12 @@ void load_start_session()
                 const auto last_modified = last_modified_check->get_header_value("Last-Modified");
                 if (!api)
                     return;
-                api->Log(ELogLevel_DEBUG, addon_name, last_modified.c_str());
                 std::istringstream in{last_modified};
                 std::chrono::sys_seconds tp;
-
                 std::chrono::from_stream(in, "%a, %d %b %Y %H:%M:%S GMT", tp);
                 const std::string ts = std::format("{:%Y-%m-%d %H:%M:%S}", tp);
                 if (!api)
                     return;
-                api->Log(ELogLevel_DEBUG, addon_name, ts.c_str());
                 if (!in) {
                     if (!api)
                         return;

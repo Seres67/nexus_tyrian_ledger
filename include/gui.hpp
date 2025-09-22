@@ -1,6 +1,7 @@
 #ifndef GUI_HPP
 #define GUI_HPP
 
-void render_tracker();
+void addon_render();
+void addon_options();
 
 #endif // GUI_HPP

@@ -16,8 +16,9 @@ stdenv.mkDerivation {
     openssl
   ];
 
+  dontStrip = true;
+
   installPhase = ''
-    x86_64-w64-mingw32-strip ./*.dll
     mkdir -p $out/lib
     cp ./*.dll $out/lib
   '';

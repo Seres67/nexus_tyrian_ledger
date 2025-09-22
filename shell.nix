@@ -3,7 +3,6 @@
   cmake,
   clang-tools,
   bintools,
-  windows,
   openssl,
 }:
 mkShell {
@@ -14,7 +13,6 @@ mkShell {
   ];
 
   buildInputs = [
-    windows.pthreads
     openssl
   ];
 }

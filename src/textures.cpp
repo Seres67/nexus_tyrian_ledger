@@ -1,3 +1,4 @@
+#define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib/httplib.h"
 #include <globals.hpp>
 #include <nexus/Nexus.h>

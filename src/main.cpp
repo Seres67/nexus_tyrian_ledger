@@ -10,8 +10,6 @@
 
 void addon_load(AddonAPI *api_p);
 void addon_unload();
-void addon_render();
-void addon_options();
 
 BOOL APIENTRY dll_main(const HMODULE hModule, const DWORD ul_reason_for_call, [[maybe_unused]] LPVOID lpReserved)
 {
@@ -83,72 +81,4 @@ void addon_unload()
     api->Renderer.Deregister(addon_options);
     api->Log(ELogLevel_INFO, addon_name, "addon unloaded!");
     api = nullptr;
-}
-
-bool window_open = false;
-void addon_render()
-{
-    ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse;
-    if (Settings::lock_window)
-        flags |= ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoBackground;
-    ImGui::SetNextWindowPos(ImVec2(300, 400), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowBgAlpha(Settings::window_alpha);
-    if (ImGui::Begin("Tyrian Ledger##Tyrian LedgerMainWindow", &window_open, flags)) {
-        check_session();
-        std::chrono::time_point<std::chrono::system_clock> next;
-        {
-            std::lock_guard lock(session_mutex);
-            next = last_session_check + std::chrono::minutes(5) + std::chrono::seconds(1);
-        }
-        const auto now = std::chrono::system_clock::now();
-        const auto minutes = std::chrono::duration_cast<std::chrono::minutes>(next - now);
-        const auto seconds = std::chrono::duration_cast<std::chrono::seconds>(next - now - minutes);
-        ImGui::Text("Next update in: %d:%lld", minutes.count(), seconds.count());
-        render_tracker();
-        ImGui::End();
-    }
-}
-
-#include <imgui/misc/cpp/imgui_stdlib.h>
-void addon_options()
-{
-    if (ImGui::Checkbox("Display help##TyrianLedgerDisplayHelp", &Settings::display_help)) {
-        Settings::json_settings[Settings::DISPLAY_HELP] = Settings::display_help;
-        Settings::save(Settings::settings_path);
-    }
-    if (ImGui::InputText("API Key##TyrianLedgerAPIKey", &Settings::api_key, ImGuiInputTextFlags_Password)) {
-        Settings::json_settings[Settings::API_KEY] = Settings::api_key;
-        Settings::save(Settings::settings_path);
-    }
-
-    if (ImGui::Checkbox("Lock Window##TyrianLedgerLockWindow", &Settings::lock_window)) {
-        Settings::json_settings[Settings::LOCK_WINDOW] = Settings::lock_window;
-        Settings::save(Settings::settings_path);
-    }
-    if (ImGui::SliderFloat("Window Opacity##TyrianLedgerOpacity", &Settings::window_alpha, 0.f, 1.f)) {
-        Settings::json_settings[Settings::WINDOW_ALPHA] = Settings::window_alpha;
-        Settings::save(Settings::settings_path);
-    }
-    ImGui::TextColored({1.0, 1.0, 0, .933}, "Experimental");
-    if (ImGui::Checkbox("Save sessions to CSV##TyrianLedgerSaveSessions", &Settings::save_sessions)) {
-        Settings::json_settings[Settings::SAVE_SESSIONS] = Settings::save_sessions;
-        Settings::save(Settings::settings_path);
-    }
-    std::vector<Currency> sorted_currencies;
-    for (const auto &val : currencies_list | std::views::values) {
-        sorted_currencies.emplace_back(val);
-    }
-    std::ranges::sort(sorted_currencies,                                                     // NOLINT
-                      [](const Currency &a, const Currency &b) { return a.name < b.name; }); // NOLINT
-    for (auto &[name, id, icon, _show] : sorted_currencies) {
-        if (ImGui::Checkbox(name.c_str(), &currencies_list[id].show)) {
-            Settings::json_settings[std::string("TYRIAN_LEDGER_").append(name)] = currencies_list[id].show;
-            Settings::save(Settings::settings_path);
-        }
-        if (const auto texture = api->Textures.Get(std::string("TYRIAN_LEDGER_ICON_").append(name).c_str());
-            texture != nullptr) {
-            ImGui::SameLine();
-            ImGui::Image(texture->Resource, ImVec2(16, 16));
-        }
-    }
 }
