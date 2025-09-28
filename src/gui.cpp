@@ -9,7 +9,7 @@ inline std::string format_with_commas(int64_t value)
 {
     std::string num = std::to_string(value);
 
-    int insert_position = static_cast<int>(num.length()) - 3;
+    auto insert_position = static_cast<signed long long>(num.length()) - 3;
     while (insert_position > 0) {
         num.insert(insert_position, ",");
         insert_position -= 3;
@@ -21,12 +21,16 @@ inline std::string format_gold(int value)
 {
     std::string num = std::to_string(value);
 
-    int insert_position = num.length();
+    auto insert_position = static_cast<signed long long>(num.length());
     num.insert(insert_position, "c");
     insert_position -= 2;
-    num.insert(insert_position, "s");
-    insert_position -= 2;
-    num.insert(insert_position, "g");
+    if (insert_position >= 0) {
+        num.insert(insert_position, "s");
+        insert_position -= 2;
+    }
+    if (insert_position >= 0) {
+        num.insert(insert_position, "g");
+    }
     return num;
 }
 

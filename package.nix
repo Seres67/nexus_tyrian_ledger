@@ -1,6 +1,5 @@
 {
   cmake,
-  openssl,
   stdenv,
 }:
 stdenv.mkDerivation {
@@ -11,12 +10,6 @@ stdenv.mkDerivation {
   nativeBuildInputs = [
     cmake
   ];
-
-  buildInputs = [
-    openssl
-  ];
-
-  dontStrip = true;
 
   installPhase = ''
     mkdir -p $out/lib

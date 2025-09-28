@@ -1,0 +1,14 @@
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: nixos-amd64
+    steps:
+    - uses: actions/checkout@v5
+    - run: nix build
+    - uses: https://data.forgejo.org/forgejo/upload-artifact@v4
+      with:
+        name: nexus_tyrian_ledger.zip
+        path: result/lib/*.dll

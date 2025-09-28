@@ -11,3 +11,4 @@ std::unordered_map<int, int> currencies_start{};
 std::unordered_map<int, int> currencies{};
 std::mutex session_mutex;
 std::chrono::time_point<std::chrono::system_clock> last_session_check;
+std::mutex api_mutex;

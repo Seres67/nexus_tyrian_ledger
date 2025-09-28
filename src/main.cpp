@@ -2,6 +2,7 @@
 #include <gui.hpp>
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
+#include <mutex>
 #include <nexus/Nexus.h>
 #include <session.hpp>
 #include <settings.hpp>
@@ -80,5 +81,8 @@ void addon_unload()
     api->Renderer.Deregister(addon_render);
     api->Renderer.Deregister(addon_options);
     api->Log(ELogLevel_INFO, addon_name, "addon unloaded!");
-    api = nullptr;
+    {
+        std::lock_guard l(api_mutex);
+        api = nullptr;
+    }
 }

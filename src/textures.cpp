@@ -1,9 +1,10 @@
-#include "win32-http.hpp"
-
 #include <globals.hpp>
+#include <mutex>
 #include <nexus/Nexus.h>
 #include <settings.hpp>
 #include <textures.hpp>
+#include <thread>
+#include <win32-http.hpp>
 
 void load_textures()
 {
@@ -26,15 +27,17 @@ void load_textures()
                     std::string endpoint = url.substr(pos);
                     std::string identifier =
                         std::string("TYRIAN_LEDGER_ICON_").append(currency["name"].get<std::string>());
-                    if (!api)
-                        return;
-                    if (api->Textures.Get(identifier.c_str()) == nullptr)
-                        api->Textures.LoadFromURL(identifier.c_str(), remote.c_str(), endpoint.c_str(), nullptr);
+                    {
+                        std::lock_guard l(api_mutex);
+                        if (api->Textures.Get(identifier.c_str()) == nullptr)
+                            api->Textures.LoadFromURL(identifier.c_str(), remote.c_str(), endpoint.c_str(), nullptr);
+                    }
                 }
             } else {
-                if (!api)
-                    return;
-                api->Log(ELogLevel_WARNING, addon_name, body.c_str());
+                {
+                    std::lock_guard l(api_mutex);
+                    api->Log(ELogLevel_WARNING, addon_name, body.c_str());
+                }
             }
         })
         .detach();

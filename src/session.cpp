@@ -1,11 +1,11 @@
-
-#include <win32-http.hpp>
-
 #include <filesystem>
 #include <fstream>
 #include <globals.hpp>
+#include <mutex>
 #include <session.hpp>
 #include <settings.hpp>
+#include <thread>
+#include <win32-http.hpp>
 
 void load_start_session()
 {
@@ -17,19 +17,17 @@ void load_start_session()
             if (status == 200) {
                 auto account_json = nlohmann::json::parse(body);
                 const std::string last_modified_str = account_json["last_modified"].get<std::string>();
-
-                if (!api)
-                    return;
-                api->Log(ELogLevel_DEBUG, addon_name, last_modified_str.c_str());
-
                 std::istringstream in(last_modified_str);
                 std::chrono::sys_time<std::chrono::seconds> last_modified_tp;
                 in >> std::chrono::parse("%FT%TZ", last_modified_tp);
 
                 if (!in) {
-                    if (!api)
-                        return;
-                    api->Log(ELogLevel_DEBUG, addon_name, "Failed to parse last_modified");
+                    {
+                        std::lock_guard l(api_mutex);
+                        if (!api)
+                            return;
+                        api->Log(ELogLevel_DEBUG, addon_name, "Failed to parse last_modified");
+                    }
                 } else {
                     std::lock_guard lock(session_mutex);
                     last_session_check = last_modified_tp;
@@ -48,9 +46,13 @@ void load_start_session()
                     current_session.start_time = std::chrono::system_clock::now();
                 }
             } else {
-                if (!api)
-                    return;
-                api->Log(ELogLevel_WARNING, addon_name, status2 ? body2.c_str() : "No response from wallet API");
+                {
+                    std::lock_guard l(api_mutex);
+                    if (!api)
+                        return;
+                    api->Log(ELogLevel_WARNING, addon_name,
+                             !body2.empty() ? body2.c_str() : "No response from wallet API");
+                }
             }
         })
         .detach();
@@ -158,16 +160,20 @@ void pull_session()
                 for (auto wallet = nlohmann::json::parse(body); const auto &curr : wallet) {
                     currencies[curr["id"]] = curr["value"];
                 }
-                if (!api)
-                    return;
-                api->Log(ELogLevel_INFO, addon_name, "Session pulled!");
+                {
+                    std::lock_guard l(api_mutex);
+                    if (!api)
+                        return;
+                    api->Log(ELogLevel_INFO, addon_name, "Session pulled!");
+                }
             } else {
-                if (!api)
-                    return;
-                api->Log(ELogLevel_WARNING, addon_name, "Failed to pull session");
-                if (!api)
-                    return;
-                api->Log(ELogLevel_WARNING, addon_name, body.c_str());
+                {
+                    std::lock_guard l(api_mutex);
+                    if (!api)
+                        return;
+                    api->Log(ELogLevel_WARNING, addon_name, "Failed to pull session");
+                    api->Log(ELogLevel_WARNING, addon_name, body.c_str());
+                }
             }
         })
         .detach();
@@ -181,7 +187,9 @@ void check_session()
         api->Log(ELogLevel_INFO, addon_name, "Checking session");
         {
             std::lock_guard lock(session_mutex);
-            last_session_check = next_update;
+            if (!api)
+                return;
+            last_session_check = current_time;
         }
         pull_session();
     }

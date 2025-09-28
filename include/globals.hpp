@@ -34,4 +34,6 @@ extern std::unordered_map<int, int> currencies;
 extern std::mutex session_mutex;
 extern std::chrono::time_point<std::chrono::system_clock> last_session_check;
 
+extern std::mutex api_mutex;
+
 #endif // GLOBALS_HPP
